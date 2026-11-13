@@ -1,0 +1,1196 @@
+%============================================================
+% RAPPORT TP ToIP — Asterisk + AWS + Ubuntu 24.04
+% Auteur : Ibrahima Fall — Master 2 SRT 2026
+% Compiler avec pdflatex (Overleaf : compilateur pdfLaTeX)
+%============================================================
+\documentclass[a4paper,11pt]{report}
+
+%--- Encodage & langue ---
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[french]{babel}
+\usepackage{lmodern}
+
+%--- Mise en page ---
+\usepackage[top=2.5cm, bottom=2.5cm, left=2.8cm, right=2.8cm]{geometry}
+\usepackage{fancyhdr}
+\usepackage{emptypage}
+\usepackage{setspace}
+\usepackage{parskip}
+
+%--- Couleurs ---
+\usepackage[dvipsnames,table]{xcolor}
+\definecolor{primary}{HTML}{1A56DB}
+\definecolor{primarylight}{HTML}{E8F0FE}
+\definecolor{success}{HTML}{0E7C3A}
+\definecolor{successlight}{HTML}{E6F4EA}
+\definecolor{warning}{HTML}{B45309}
+\definecolor{warninglight}{HTML}{FEF3C7}
+\definecolor{danger}{HTML}{B91C1C}
+\definecolor{dangerlight}{HTML}{FEE2E2}
+\definecolor{codebg}{HTML}{1E1E2E}
+\definecolor{codetext}{HTML}{CDD6F4}
+\definecolor{codecomment}{HTML}{6C7086}
+\definecolor{codegreen}{HTML}{A6E3A1}
+\definecolor{codeblue}{HTML}{89B4FA}
+\definecolor{codered}{HTML}{F38BA8}
+\definecolor{darkblue}{HTML}{0F2D6B}
+\definecolor{lightgray}{HTML}{F8F9FA}
+\definecolor{bordergray}{HTML}{E0E0E0}
+
+%--- Graphiques & figures ---
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{wrapfig}
+\usepackage{tikz}
+\usetikzlibrary{shapes.geometric, arrows.meta, positioning, shadows, backgrounds}
+
+%--- Tableaux ---
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{longtable}
+\usepackage{multirow}
+\usepackage{tabularx}
+\usepackage{colortbl}
+
+%--- Boîtes colorées ---
+\usepackage[most]{tcolorbox}
+\tcbuselibrary{listings, breakable, skins}
+
+%--- Code source ---
+\usepackage{listings}
+\lstset{
+  backgroundcolor=\color{codebg},
+  basicstyle=\ttfamily\footnotesize\color{codetext},
+  keywordstyle=\color{codeblue}\bfseries,
+  commentstyle=\color{codecomment}\itshape,
+  stringstyle=\color{codegreen},
+  breaklines=true,
+  breakatwhitespace=true,
+  showstringspaces=false,
+  frame=none,
+  xleftmargin=12pt,
+  xrightmargin=12pt,
+  aboveskip=0pt,
+  belowskip=0pt,
+  numbers=none,
+  tabsize=2,
+  literate={é}{{\'{e}}}1 {è}{{\`{e}}}1 {ê}{{\^{e}}}1 {à}{{\`{a}}}1
+           {â}{{\^{a}}}1 {ô}{{\^{o}}}1 {û}{{\^{u}}}1 {ç}{{\c{c}}}1
+           {î}{{\^{i}}}1 {ï}{{\"i}}1 {ù}{{\`{u}}}1 {ü}{{\"u}}1
+}
+
+%--- Titres de sections ---
+\usepackage{titlesec}
+\titleformat{\chapter}[display]
+  {\normalfont\Large\bfseries\color{primary}}
+  {\chaptertitlename\ \thechapter}{12pt}{\Huge}
+\titleformat{\section}
+  {\normalfont\large\bfseries\color{primary}}
+  {\thesection}{1em}{}
+\titleformat{\subsection}
+  {\normalfont\normalsize\bfseries\color{darkblue}}
+  {\thesubsection}{1em}{}
+\titleformat{\subsubsection}
+  {\normalfont\normalsize\bfseries}
+  {\thesubsubsection}{1em}{}
+
+%--- Liens hypertexte ---
+\usepackage[colorlinks=true, linkcolor=primary, urlcolor=primary, citecolor=primary]{hyperref}
+
+%--- Divers ---
+\usepackage{enumitem}
+\usepackage{fontawesome5}
+\usepackage{microtype}
+\usepackage{caption}
+\usepackage{subcaption}
+
+%============================================================
+% ENVIRONNEMENTS PERSONNALISÉS
+%============================================================
+
+% Boîte info bleue
+\newtcolorbox{infobox}[1][]{
+  enhanced, breakable,
+  colback=primarylight, colframe=primary,
+  leftrule=4pt, toprule=0pt, bottomrule=0pt, rightrule=0pt,
+  arc=4pt,
+  fonttitle=\small\bfseries\color{primary}\MakeUppercase,
+  title={#1},
+  before upper={\setlength{\parskip}{4pt}},
+}
+
+% Boîte succès verte
+\newtcolorbox{successbox}[1][Résultat attendu]{
+  enhanced, breakable,
+  colback=successlight, colframe=success,
+  leftrule=4pt, toprule=0pt, bottomrule=0pt, rightrule=0pt,
+  arc=4pt,
+  fonttitle=\small\bfseries\color{success}\MakeUppercase,
+  title={#1},
+}
+
+% Boîte attention orange
+\newtcolorbox{warningbox}[1][Attention]{
+  enhanced, breakable,
+  colback=warninglight, colframe=warning,
+  leftrule=4pt, toprule=0pt, bottomrule=0pt, rightrule=0pt,
+  arc=4pt,
+  fonttitle=\small\bfseries\color{warning}\MakeUppercase,
+  title={#1},
+}
+
+% Boîte danger rouge
+\newtcolorbox{dangerbox}[1][Critique]{
+  enhanced, breakable,
+  colback=dangerlight, colframe=danger,
+  leftrule=4pt, toprule=0pt, bottomrule=0pt, rightrule=0pt,
+  arc=4pt,
+  fonttitle=\small\bfseries\color{danger}\MakeUppercase,
+  title={#1},
+}
+
+% Bloc de code avec en-tête
+\newtcolorbox{codebox}[1][bash]{
+  enhanced, breakable,
+  colback=codebg, colframe=codebg,
+  arc=6pt,
+  before upper={\lstset{language=bash}},
+  title={\texttt{\textcolor{codeblue}{\faTerminal\ #1}}},
+  attach boxed title to top left={yshift=-2mm, xshift=8pt},
+  boxed title style={colback=codebg!80!black, arc=3pt, boxrule=0pt},
+  top=8pt, bottom=8pt, left=6pt, right=6pt,
+}
+
+% Tableau de configuration
+\newcolumntype{L}[1]{>{\raggedright\arraybackslash}p{#1}}
+\newcolumntype{C}[1]{>{\centering\arraybackslash}p{#1}}
+
+%============================================================
+% EN-TÊTES ET PIEDS DE PAGE
+%============================================================
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\small\textcolor{primary}{\textbf{TP ToIP}} — Asterisk 20 + AWS + Linphone}
+\fancyhead[R]{\small\textcolor{gray}{Ibrahima Fall — M2 SRT 2026}}
+\fancyfoot[C]{\small\textcolor{gray}{\thepage}}
+\renewcommand{\headrulewidth}{0.4pt}
+\renewcommand{\headrule}{\hbox to\headwidth{\color{primary}\leaders\hrule height \headrulewidth\hfill}}
+
+%============================================================
+% DÉBUT DU DOCUMENT
+%============================================================
+\begin{document}
+
+%--- PAGE DE GARDE ---
+\begin{titlepage}
+\pagecolor{darkblue}
+\begin{tikzpicture}[remember picture, overlay]
+  \fill[primary!80!darkblue] (current page.north west) rectangle ([yshift=-6cm]current page.north east);
+  \fill[success!60!darkblue, opacity=0.3] ([xshift=-4cm]current page.east) circle (8cm);
+\end{tikzpicture}
+
+\vspace*{1cm}
+\begin{center}
+  {\color{white!70!gray}\large\textsc{Université de Dakar}}\\[0.3cm]
+  {\color{white!70!gray}\normalsize Département Réseaux et Télécommunications}\\[0.3cm]
+  {\color{white!50!gray}\small Master 2 — Systèmes, Réseaux et Télécommunications}
+
+  \vspace{2cm}
+  \begin{tcolorbox}[
+    enhanced, arc=12pt,
+    colback=white!10!darkblue, colframe=white!30!primary,
+    boxrule=1pt, left=16pt, right=16pt, top=16pt, bottom=16pt
+  ]
+  \centering
+  {\color{white!60!gray}\normalsize RAPPORT DE TRAVAUX PRATIQUES}\\[0.5cm]
+  {\color{white}\Huge\bfseries Téléphonie sur IP (ToIP)}\\[0.4cm]
+  {\color{white!80!gray}\Large\itshape Déploiement d'un IPBX Asterisk sur le Cloud AWS}
+  \end{tcolorbox}
+
+  \vspace{1.5cm}
+  \begin{tcolorbox}[
+    enhanced, arc=8pt,
+    colback=white!5!darkblue, colframe=white!20!darkblue,
+    boxrule=0.5pt, left=12pt, right=12pt, top=10pt, bottom=10pt
+  ]
+  \centering\color{white!80!gray}\small
+  \begin{tabular}{lll}
+    \faCloud\ \textbf{Cloud} & Amazon Web Services (AWS EC2) & Free Tier \\[4pt]
+    \faLinux\ \textbf{OS Serveur} & Ubuntu Server 24.04 LTS & \\[4pt]
+    \faPhone\ \textbf{IPBX} & Asterisk 20.18 & Compilé depuis les sources \\[4pt]
+    \faNetworkWired\ \textbf{Protocole} & SIP / PJSIP & RFC 3261 \\[4pt]
+    \faVolumeUp\ \textbf{Transport} & RTP / RTCP & Audio + Vidéo \\[4pt]
+    \faMobileAlt\ \textbf{Softphone} & Linphone & Android / iPhone / Windows \\[4pt]
+    \faShieldAlt\ \textbf{Sécurité} & Fail2ban & Protection anti-scanners SIP \\[4pt]
+    \faMicrophone\ \textbf{IVR} & Google Text-to-Speech & Voix naturelle française \\[4pt]
+  \end{tabular}
+  \end{tcolorbox}
+
+  \vspace{2cm}
+  \begin{tabular}{ll}
+    \color{white!70!gray}\textbf{Réalisé par :} & \color{white}\textbf{Ibrahima Fall}\\[6pt]
+    \color{white!70!gray}\textbf{Encadrant :} & \color{white}Dr Moustapha Mbaye\\[6pt]
+    \color{white!70!gray}\textbf{Année académique :} & \color{white}2024 -- 2025\\[6pt]
+    \color{white!70!gray}\textbf{Date :} & \color{white}Mai 2026\\
+  \end{tabular}
+\end{center}
+\end{titlepage}
+
+\nopagecolor
+
+%--- TABLE DES MATIÈRES ---
+\tableofcontents
+\newpage
+
+%============================================================
+\chapter{Introduction}
+%============================================================
+
+\section{Contexte et objectifs}
+
+Ce rapport présente le travail pratique de Téléphonie sur IP (ToIP) réalisé dans le cadre du cours du Dr Moustapha Mbaye, au sein du Master 2 Systèmes, Réseaux et Télécommunications.
+
+L'objectif principal était de déployer une infrastructure de téléphonie sur IP complète et fonctionnelle, en utilisant des technologies open-source et le cloud public Amazon Web Services (AWS).
+
+\begin{infobox}[Objectifs du TP]
+\begin{itemize}[leftmargin=1.2em, itemsep=2pt]
+  \item Mettre en place un serveur IPBX \textbf{Asterisk 20} sur une instance EC2 Ubuntu 24.04 LTS
+  \item Configurer le protocole \textbf{SIP/PJSIP} pour la gestion des comptes et la signalisation
+  \item Permettre des \textbf{appels audio et vidéo} entre deux softphones Linphone
+  \item Configurer la \textbf{messagerie vocale} en langue française
+  \item Mettre en place une \textbf{conférence d'appel} multi-participants
+  \item Déployer un \textbf{IVR} (Menu Vocal Interactif) avec voix Google TTS
+  \item Configurer un \textbf{centre d'appel} avec file d'attente (Queue)
+  \item Analyser les protocoles avec \textbf{Wireshark}
+  \item Sécuriser le serveur contre les \textbf{attaques SIP automatiques} avec Fail2ban
+\end{itemize}
+\end{infobox}
+
+\section{Architecture mise en place}
+
+L'architecture déployée correspond au modèle théorique du cours : Asterisk joue le rôle d'IPBX/Softswitch, Linphone est le terminal IP (softphone), SIP assure la signalisation et RTP/RTCP transporte les flux audio et vidéo.
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[
+  box/.style={draw, rounded corners=6pt, minimum width=2.8cm, minimum height=1.2cm,
+              align=center, font=\small\bfseries, thick},
+  cloud/.style={box, fill=primary!15, draw=primary, text=primary},
+  phone/.style={box, fill=success!15, draw=success, text=success!80!black},
+  arrow/.style={->, thick, >=Stealth},
+  label/.style={font=\tiny, color=gray}
+]
+  % Serveur AWS
+  \node[cloud, minimum width=4cm, minimum height=2cm] (asterisk) at (0,0) {
+    \faCloud\ AWS EC2\\
+    \textbf{Asterisk 20.18}\\
+    {\footnotesize\color{gray}Ubuntu 24.04}\\
+    {\footnotesize\color{gray}IP: <IP_PUBLIQUE>}
+  };
+
+  % Téléphones
+  \node[phone] (phone1) at (-5.5, 1.5) {\faMobileAlt\\Linphone\\{\footnotesize 1001 — Étudiant}};
+  \node[phone] (phone2) at (-5.5,-1.5) {\faDesktop\\Linphone\\{\footnotesize 1002 — Professeur}};
+  \node[phone] (conf)   at ( 5.5, 0) {\faUsers\\Conférence\\{\footnotesize Extension 200}};
+
+  % Flèches SIP
+  \draw[arrow, primary] (phone1) -- node[above, label]{SIP REGISTER / INVITE} (asterisk);
+  \draw[arrow, primary] (phone2) -- node[below, label]{SIP REGISTER / INVITE} (asterisk);
+  \draw[arrow, success!70!black, dashed] (asterisk) -- node[above, label]{RTP/RTCP (audio+vidéo)} (conf);
+
+  % Flèches RTP
+  \draw[arrow, orange!70!black, <->] (phone1) -- node[right, label, xshift=2pt]{RTP} (phone2);
+
+  % Internet cloud
+  \node[draw, cloud shape, cloud puffs=10, aspect=2, fill=blue!5, draw=blue!30,
+        font=\tiny\color{blue!60}] at (-2.8, 0) {Internet};
+\end{tikzpicture}
+\caption{Architecture ToIP déployée — Asterisk IPBX sur AWS}
+\label{fig:architecture}
+\end{figure}
+
+\begin{center}
+\begin{tabular}{lll}
+\toprule
+\rowcolor{primarylight}\textbf{Composant} & \textbf{Rôle dans le cours} & \textbf{Technologie utilisée}\\
+\midrule
+Asterisk & IPBX / Softswitch & Asterisk 20.18\\
+PJSIP/SIP & Signalisation (INVITE, ACK, BYE) & RFC 3261\\
+RTP/RTCP & Transport flux audio et vidéo & RFC 3550\\
+Linphone & Terminal IP (softphone) & Linphone Android/Windows\\
+AWS EC2 & Infrastructure physique & t2.micro Ubuntu 24.04\\
+Security Group & Pare-feu réseau & AWS\\
+Fail2ban & Sécurité applicative & Fail2ban 1.0\\
+\bottomrule
+\end{tabular}
+\end{center}
+
+%============================================================
+\chapter{Infrastructure Cloud AWS}
+%============================================================
+
+\section{Création du compte AWS}
+
+Amazon Web Services (AWS) est la plateforme cloud d'Amazon permettant de louer des serveurs virtuels (instances EC2). Le Free Tier (niveau gratuit) est disponible pour les nouveaux comptes pendant 12 mois.
+
+\begin{infobox}[Procédure d'inscription]
+\begin{enumerate}[leftmargin=1.4em, itemsep=3pt]
+  \item Aller sur \url{https://aws.amazon.com} $\to$ cliquer \textbf{"Créer un compte AWS"}
+  \item Remplir : email, mot de passe, nom du compte (\texttt{TP-ToIP-Fall})
+  \item Vérifier l'email via le lien de confirmation
+  \item Informations de contact : type Personnel, adresse Dakar Sénégal
+  \item Carte bancaire pour vérification (pré-autorisation 1 USD remboursée)
+  \item Validation par SMS avec code de confirmation
+  \item Sélectionner le plan \textbf{Gratuit (Free)}
+\end{enumerate}
+\end{infobox}
+
+\section{Création de l'instance EC2}
+
+\subsection{Configuration de l'instance}
+
+\begin{center}
+\begin{tabularx}{\textwidth}{lX}
+\toprule
+\rowcolor{primarylight}\textbf{Paramètre} & \textbf{Valeur}\\
+\midrule
+Nom de l'instance & Asterisk-ToIP\\
+Image OS (AMI) & Ubuntu Server 22.04 LTS (HVM) — 64-bit x86\\
+Type d'instance & t2.micro (1 vCPU, 1 Go RAM) — Free tier eligible\\
+Stockage & 20 Go (augmenté depuis 8 Go par défaut)\\
+Adresse IP publique & <IP_PUBLIQUE>\\
+Région & Europe (Paris) — eu-west-3\\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\subsection{Paire de clés SSH}
+
+\begin{dangerbox}[Critique — Ne jamais perdre ce fichier]
+La clé SSH est l'unique moyen d'accès au serveur. Si le fichier \texttt{.pem} est perdu, il n'est plus possible de se connecter. Conserver dans un dossier sécurisé.
+\end{dangerbox}
+
+\begin{itemize}[leftmargin=1.4em, itemsep=2pt]
+  \item Nom : \texttt{cle-asterisk}
+  \item Type : RSA
+  \item Format : \texttt{.pem} (Linux/Mac) — le fichier se télécharge automatiquement
+\end{itemize}
+
+\subsection{Règles de sécurité (Security Group)}
+
+\begin{center}
+\begin{tabular}{lllll}
+\toprule
+\rowcolor{primarylight}\textbf{Type} & \textbf{Protocole} & \textbf{Port(s)} & \textbf{Source} & \textbf{Usage}\\
+\midrule
+SSH & TCP & 22 & Mon IP seulement & Administration serveur\\
+Custom UDP & UDP & 5060 & 0.0.0.0/0 & SIP (signalisation)\\
+Custom TCP & TCP & 5060 & 0.0.0.0/0 & SIP sur TCP\\
+Custom UDP & UDP & 10000--20000 & 0.0.0.0/0 & RTP (flux audio/vidéo)\\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\section{Connexion SSH au serveur}
+
+\begin{codebox}[bash — Connexion SSH]
+\begin{lstlisting}
+# Modifier les permissions de la cle (obligatoire)
+chmod 400 cle-asterisk.pem
+
+# Se connecter au serveur
+ssh -i cle-asterisk.pem ubuntu@<IP_PUBLIQUE>
+
+# Mise a jour du systeme
+sudo apt update && sudo apt upgrade -y
+sudo apt install -y net-tools curl wget nano
+\end{lstlisting}
+\end{codebox}
+
+%============================================================
+\chapter{Installation d'Asterisk 20}
+%============================================================
+
+\begin{infobox}[Qu'est-ce qu'Asterisk ?]
+Asterisk est un logiciel open-source qui transforme le serveur Ubuntu en IPBX. Il gère la signalisation SIP, l'authentification des utilisateurs, le routage des appels, la messagerie vocale, les conférences et les centres d'appel.
+\end{infobox}
+
+\begin{warningbox}[Durée de compilation]
+La compilation complète prend \textbf{20 à 25 minutes} sur un t2.micro. Ne jamais fermer le terminal pendant ce processus.
+\end{warningbox}
+
+\section{Installation des dépendances}
+
+Ubuntu 24.04 nécessite des dépendances supplémentaires par rapport aux versions antérieures. Notamment, le paquet \texttt{subversion} est absent par défaut et est requis pour le script \texttt{get\_mp3\_source.sh}.
+
+\begin{codebox}[bash — Dépendances Ubuntu 24.04]
+\begin{lstlisting}
+# Dependances de base
+sudo apt install -y build-essential git curl wget \
+  libssl-dev libncurses5-dev libnewt-dev libxml2-dev \
+  libsqlite3-dev uuid-dev libjansson-dev \
+  pkg-config libedit-dev libxslt1-dev
+
+# Dependances specifiques Ubuntu 24.04
+sudo apt install -y subversion \
+  libavcodec-dev libavformat-dev \
+  libswscale-dev libavutil-dev \
+  libopencore-amrnb-dev libopencore-amrwb-dev
+\end{lstlisting}
+\end{codebox}
+
+\section{Téléchargement et compilation}
+
+\begin{codebox}[bash — Compilation Asterisk 20]
+\begin{lstlisting}
+cd /usr/src
+sudo wget https://downloads.asterisk.org/pub/telephony/asterisk/asterisk-20-current.tar.gz
+sudo tar xzf asterisk-20-current.tar.gz
+cd asterisk-20*/
+
+# Codec MP3
+sudo contrib/scripts/get_mp3_source.sh
+
+# Configuration (1-2 minutes)
+sudo ./configure --with-jansson-bundled
+
+# Selection des modules (Ubuntu 24.04 — ne pas activer codec_h264 ni format_mp4)
+sudo make menuselect.makeopts
+sudo menuselect/menuselect \
+  --enable codec_opus \
+  --enable res_format_attr_h264 \
+  --enable res_format_attr_vp8 \
+  menuselect.makeopts
+
+# Compilation et installation (15-20 minutes)
+sudo make -j$(nproc)
+sudo make install
+sudo make samples
+sudo make config
+sudo ldconfig
+
+# Verification
+asterisk -V
+# Resultat : Asterisk 20.18.2
+\end{lstlisting}
+\end{codebox}
+
+\begin{dangerbox}[Ubuntu 24.04 — Modules incompatibles]
+Sur Ubuntu 24.04, les modules \texttt{codec\_h264} et \texttt{format\_mp4} n'existent pas. La vidéo H264 fonctionne via \texttt{res\_format\_attr\_h264}. Ne pas essayer de les activer — cela fait échouer la compilation.
+\end{dangerbox}
+
+\begin{successbox}
+La commande \texttt{asterisk -V} retourne \texttt{Asterisk 20.18.2}. Asterisk est installé avec succès.
+\end{successbox}
+
+%============================================================
+\chapter{Configuration des Comptes SIP}
+%============================================================
+
+\section{Le fichier pjsip.conf}
+
+\begin{infobox}[Qu'est-ce que PJSIP ?]
+PJSIP est le module SIP moderne d'Asterisk. Il gère l'authentification des utilisateurs, la signalisation SIP et la correction NAT. Chaque utilisateur est défini par 3 objets obligatoires :
+\begin{itemize}[leftmargin=1.2em, itemsep=2pt]
+  \item \textbf{endpoint} : les capacités de l'utilisateur (codecs, contexte, gestion NAT)
+  \item \textbf{auth} : l'authentification (username + password)
+  \item \textbf{aor} : l'adresse de contact (où joindre l'utilisateur)
+\end{itemize}
+\end{infobox}
+
+\section{Gestion du NAT — Options obligatoires}
+
+La gestion du NAT est critique pour les appels VoIP sur le cloud. Trois paramètres sont obligatoires pour garantir que les flux RTP traversent correctement les NAT des clients mobiles :
+
+\begin{center}
+\begin{tabularx}{\textwidth}{lX}
+\toprule
+\rowcolor{primarylight}\textbf{Option} & \textbf{Rôle}\\
+\midrule
+\texttt{rtp\_symmetric=yes} & Renvoie le RTP vers l'adresse source — corrige les mobiles derrière NAT\\
+\texttt{rewrite\_contact=yes} & Corrige l'adresse de contact SIP envoyée par le téléphone\\
+\texttt{force\_rport=yes} & Force l'utilisation du port source — corrige l'iPhone qui envoie son IP privée dans le SDP\\
+\texttt{direct\_media=no} & Tout le RTP passe par Asterisk — garantit le fonctionnement sur le cloud\\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\section{Configuration complète de pjsip.conf}
+
+\begin{codebox}[ini — /etc/asterisk/pjsip.conf — Version finale testée]
+\begin{lstlisting}
+; ===== TRANSPORT UDP =====
+[transport-udp]
+type=transport
+protocol=udp
+bind=0.0.0.0:5060
+external_media_address=<IP_PUBLIQUE>
+external_signaling_address=<IP_PUBLIQUE>
+local_net=172.31.0.0/16
+
+; ===== MODELE COMMUN ENDPOINT (template) =====
+[ep-base](!)
+type=endpoint
+context=internal
+disallow=all
+allow=ulaw
+allow=alaw
+allow=g722
+allow=gsm
+allow=h264
+allow=vp8
+dtmf_mode=rfc4733
+media_encryption=no
+direct_media=no
+rtp_symmetric=yes
+rewrite_contact=yes
+force_rport=yes
+
+; ===== MODELES AUTH ET AOR =====
+[auth-base](!)
+type=auth
+auth_type=userpass
+
+[aor-base](!)
+type=aor
+max_contacts=2
+remove_existing=yes
+qualify_frequency=30
+
+; ===== UTILISATEUR 1001 (Etudiant) =====
+[1001](ep-base)
+auth=auth1001
+aors=1001
+callerid="Ibrahima Fall" <1001>
+
+[auth1001](auth-base)
+username=1001
+password=<MOT_DE_PASSE>
+
+[1001](aor-base)
+
+; ===== UTILISATEUR 1002 (Professeur) =====
+[1002](ep-base)
+auth=auth1002
+aors=1002
+callerid="Mr Mbaye" <1002>
+
+[auth1002](auth-base)
+username=1002
+password=<MOT_DE_PASSE>
+
+[1002](aor-base)
+\end{lstlisting}
+\end{codebox}
+
+\begin{dangerbox}[NE JAMAIS ajouter d'ACL dans pjsip.conf]
+Une ACL dans \texttt{pjsip.conf} bloque TOUS les endpoints y compris tes propres téléphones avec l'erreur "Not match Endpoint ACL". La sécurité contre les scanners est gérée uniquement par \textbf{Fail2ban}.
+\end{dangerbox}
+
+%============================================================
+\chapter{Plan de Numérotation}
+%============================================================
+
+\section{Le fichier extensions.conf}
+
+\begin{infobox}[Qu'est-ce que le dialplan ?]
+Le dialplan est la logique de routage des appels d'Asterisk. Il définit exactement ce que fait le serveur quand quelqu'un compose un numéro : qui appeler, combien de temps, que faire si pas de réponse. La syntaxe est \texttt{exten => numéro, priorité, Application(paramètres)}.
+\end{infobox}
+
+\subsection{Numéros configurés}
+
+\begin{center}
+\begin{tabular}{cll}
+\toprule
+\rowcolor{primarylight}\textbf{Extension} & \textbf{Service} & \textbf{Comportement}\\
+\midrule
+\texttt{1001} & Appel direct + messagerie & Sonne 30s, bascule vers messagerie si absent\\
+\texttt{1002} & Appel direct + messagerie & Sonne 30s, bascule vers messagerie si absent\\
+\texttt{*97} & Consulter sa boîte vocale & Accès direct à la messagerie\\
+\texttt{9999} & Test écho & Retourne la voix de l'appelant\\
+\texttt{200} & Conférence ConfBridge & Salle multi-participants\\
+\texttt{100} & IVR Google TTS & Menu vocal interactif\\
+\texttt{1, 2, 0} & Choix depuis l'IVR & Routage vers agents ou file d'attente\\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\section{Configuration complète de extensions.conf}
+
+\begin{codebox}[ini — /etc/asterisk/extensions.conf — Version finale]
+\begin{lstlisting}
+[general]
+static=yes
+writeprotect=no
+
+[internal]
+
+; --- Extension 1001 avec messagerie vocale ---
+exten => 1001,1,NoOp(Appel vers 1001)
+exten => 1001,2,Dial(PJSIP/1001,30)
+exten => 1001,3,Set(CHANNEL(language)=fr)
+exten => 1001,4,Voicemail(1001@default,u)
+exten => 1001,5,Hangup()
+
+; --- Extension 1002 avec messagerie vocale ---
+exten => 1002,1,NoOp(Appel vers 1002)
+exten => 1002,2,Dial(PJSIP/1002,30)
+exten => 1002,3,Set(CHANNEL(language)=fr)
+exten => 1002,4,Voicemail(1002@default,u)
+exten => 1002,5,Hangup()
+
+; --- Consulter sa boite vocale (*97) ---
+exten => *97,1,Set(CHANNEL(language)=fr)
+exten => *97,2,VoiceMailMain(${CALLERID(num)}@default,,s)
+exten => *97,3,Hangup()
+
+; --- Test echo (9999) ---
+exten => 9999,1,Answer()
+exten => 9999,2,Playback(demo-echotest)
+exten => 9999,3,Echo()
+exten => 9999,4,Hangup()
+
+; --- Conference d'appel (200) ---
+exten => 200,1,NoOp(Conference 200)
+exten => 200,2,ConfBridge(200)
+exten => 200,3,Hangup()
+
+; --- IVR Menu Principal (100) ---
+exten => 100,1,NoOp(IVR Menu Principal)
+exten => 100,2,Answer()
+exten => 100,3,Set(CHANNEL(language)=fr)
+exten => 100,4,Background(fr/bienvenue)
+exten => 100,5,WaitExten(10)
+exten => 100,6,Goto(ivr-timeout,s,1)
+
+; Choix IVR : 1 = agent 1001
+exten => 1,1,NoOp(IVR -> Agent 1001)
+exten => 1,2,Dial(PJSIP/1001,30)
+exten => 1,3,Hangup()
+
+; Choix IVR : 2 = agent 1002
+exten => 2,1,NoOp(IVR -> Agent 1002)
+exten => 2,2,Dial(PJSIP/1002,30)
+exten => 2,3,Hangup()
+
+; Choix IVR : 0 = file d'attente
+exten => 0,1,NoOp(IVR -> Queue)
+exten => 0,2,Queue(support,,,,60)
+exten => 0,3,Hangup()
+
+[ivr-timeout]
+exten => s,1,NoOp(Timeout IVR)
+exten => s,2,Playback(vm-goodbye)
+exten => s,3,Hangup()
+\end{lstlisting}
+\end{codebox}
+
+\section{Explication des applications Asterisk utilisées}
+
+\begin{center}
+\begin{tabularx}{\textwidth}{lX}
+\toprule
+\rowcolor{primarylight}\textbf{Application} & \textbf{Rôle}\\
+\midrule
+\texttt{NoOp()} & Écrit un message dans les logs — utile pour déboguer\\
+\texttt{Dial(PJSIP/1001,30)} & Appelle l'endpoint 1001 via PJSIP, sonne 30s maximum\\
+\texttt{Voicemail(1001@default,u)} & Redirige vers la messagerie vocale de 1001 (u = unavailable)\\
+\texttt{Background(fr/bienvenue)} & Joue un son \textbf{ET} écoute les touches DTMF simultanément\\
+\texttt{WaitExten(10)} & Attend 10 secondes qu'une touche DTMF soit pressée\\
+\texttt{ConfBridge(200)} & Rejoint la salle de conférence numéro 200\\
+\texttt{Queue(support)} & Entre dans la file d'attente nommée "support"\\
+\texttt{Echo()} & Renvoie le flux audio de l'appelant en retour\\
+\texttt{Set(CHANNEL(language)=fr)} & Force la langue française pour les messages système\\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+%============================================================
+\chapter{Services Configurés}
+%============================================================
+
+\section{Messagerie Vocale (voicemail.conf)}
+
+\subsection{Installation des sons en français}
+
+\begin{codebox}[bash — Sons français pour Asterisk]
+\begin{lstlisting}
+cd /var/lib/asterisk/sounds
+sudo mkdir -p fr && cd fr
+sudo wget -q https://downloads.asterisk.org/pub/telephony/sounds/\
+asterisk-core-sounds-fr-wav-current.tar.gz
+sudo tar xzf asterisk-core-sounds-fr-wav-current.tar.gz
+sudo rm asterisk-core-sounds-fr-wav-current.tar.gz
+\end{lstlisting}
+\end{codebox}
+
+\subsection{Configuration de voicemail.conf}
+
+\begin{codebox}[ini — /etc/asterisk/voicemail.conf]
+\begin{lstlisting}
+[general]
+format=wav49|gsm|wav
+serveremail=asterisk@localhost
+attach=yes
+maxlogins=3
+language=fr
+
+[default]
+1001 => 1234,Ibrahima Fall
+1002 => 1234,Mr Mbaye
+\end{lstlisting}
+\end{codebox}
+
+\begin{warningbox}[Attention au copier-coller]
+La ligne \texttt{serveremail=asterisk@localhost} ne doit pas contenir de lien mailto — problème fréquent avec certains éditeurs de texte. Vérifier et taper manuellement si nécessaire.
+\end{warningbox}
+
+\subsection{Utilisation de la messagerie vocale}
+
+\begin{itemize}[leftmargin=1.4em, itemsep=3pt]
+  \item \textbf{Laisser un message} : appeler 1002, ne pas décrocher, laisser un message après le bip
+  \item \textbf{Écouter ses messages} : composer \texttt{*97} $\to$ Asterisk donne accès direct à la boîte
+  \item \textbf{PIN} : \texttt{1234} (configuré dans voicemail.conf)
+\end{itemize}
+
+\section{Conférence d'appel (confbridge.conf)}
+
+\begin{infobox}[Qu'est-ce que ConfBridge ?]
+ConfBridge est le module de conférence d'Asterisk. Il permet à plusieurs participants de rejoindre une même salle audio/vidéo en composant le même numéro (200). Il remplace l'ancien module MeetMe qui nécessitait le pilote DAHDI.
+\end{infobox}
+
+\begin{codebox}[ini — Ajout dans /etc/asterisk/confbridge.conf]
+\begin{lstlisting}
+[default_bridge]
+type=bridge
+max_members=10
+record_conference=no
+video_mode=follow_talker  ; Camera = celui qui parle
+
+[default_user]
+type=user
+announce_join_leave=yes
+music_on_hold_when_empty=yes
+\end{lstlisting}
+\end{codebox}
+
+\section{Centre d'appel — File d'attente (queues.conf)}
+
+\begin{infobox}[Qu'est-ce qu'une Queue ?]
+Une Queue (file d'attente) met les appelants en attente et distribue leurs appels aux agents disponibles selon une stratégie définie. La stratégie \texttt{rrmemory} (Round-Robin Memory) distribue en alternance entre les agents et se souvient du dernier agent ayant répondu.
+\end{infobox}
+
+\begin{codebox}[ini — /etc/asterisk/queues.conf]
+\begin{lstlisting}
+[general]
+persistentmembers=yes
+autofill=yes
+
+[support]
+strategy=rrmemory          ; Round-robin avec memoire
+timeout=30                 ; Sonne chaque agent 30s
+retry=5                    ; Attend 5s avant de reessayer
+wrapuptime=5               ; 5s apres appel avant d'en recevoir un autre
+announce-frequency=30      ; Annonce le temps d'attente toutes les 30s
+announce-holdtime=yes      ; Annonce combien de temps l'appelant attend
+announce-position=yes      ; Annonce la position dans la file
+music=default              ; Musique d'attente
+member => PJSIP/1001,0,Agent 1 Ibrahima
+member => PJSIP/1002,0,Agent 2 Mbaye
+\end{lstlisting}
+\end{codebox}
+
+\section{IVR avec Google Text-to-Speech}
+
+\begin{infobox}[Qu'est-ce qu'un IVR ?]
+Un IVR (Interactive Voice Response — Menu Vocal Interactif) est le système automatique qu'on entend quand on appelle une entreprise : "Pour le service commercial appuyez sur 1, pour le support appuyez sur 2...". Il guide l'appelant vers le bon service sans intervention humaine.
+\end{infobox}
+
+\subsection{Pourquoi Google TTS ?}
+
+Google Text-to-Speech génère une voix naturelle et claire en français, bien supérieure à la synthèse vocale basique de \texttt{espeak}. Le message est généré en MP3 puis converti en WAV 8000~Hz mono, le format requis par Asterisk.
+
+\subsection{Génération du message d'accueil}
+
+\begin{codebox}[bash — Génération avec Google TTS]
+\begin{lstlisting}
+# Installer les outils
+sudo apt install -y python3-pip ffmpeg
+pip3 install gtts --break-system-packages
+
+# Generer le message (depuis le dossier home)
+cd ~
+python3 -c "
+from gtts import gTTS
+tts = gTTS('Bienvenue. Pour joindre lagent un, appuyez sur 1. \
+Pour lagent deux, appuyez sur 2. \
+Pour la file dattente, appuyez sur 0.', lang='fr')
+tts.save('bienvenue_google.mp3')
+"
+
+# Convertir en format Asterisk (8000Hz mono WAV)
+sudo ffmpeg -i ~/bienvenue_google.mp3 \
+  -ar 8000 -ac 1 -acodec pcm_s16le \
+  /var/lib/asterisk/sounds/fr/bienvenue.wav -y
+
+sudo chmod 644 /var/lib/asterisk/sounds/fr/bienvenue.wav
+sudo asterisk -rx "dialplan reload"
+\end{lstlisting}
+\end{codebox}
+
+\subsection{Fonctionnement du menu IVR}
+
+\begin{center}
+\begin{tikzpicture}[
+  node/.style={draw, rounded corners=5pt, align=center, font=\small, minimum width=3cm, minimum height=0.9cm},
+  start/.style={node, fill=primary!20, draw=primary},
+  action/.style={node, fill=gray!10},
+  end/.style={node, fill=success!20, draw=success},
+  arrow/.style={->, >=Stealth, thick}
+]
+  \node[start] (dial) at (0,0) {Compose \textbf{100}};
+  \node[action] (answer) at (0,-1.6) {Asterisk répond\\joue le message Google TTS};
+  \node[action] (wait) at (0,-3.2) {Attente touche DTMF\\(10 secondes)};
+
+  \node[end] (agent1) at (-4,-5) {Appelle\\Agent \textbf{1001}};
+  \node[end] (agent2) at (0,-5) {Appelle\\Agent \textbf{1002}};
+  \node[end] (queue) at (4,-5) {Entre dans la\\File d'attente};
+  \node[action] (bye) at (0,-6.4) {"Au revoir"\\Raccroche};
+
+  \draw[arrow] (dial) -- (answer);
+  \draw[arrow] (answer) -- (wait);
+  \draw[arrow] (wait) -- node[left, font=\scriptsize]{Touche \textbf{1}} (agent1);
+  \draw[arrow] (wait) -- node[right, font=\scriptsize]{Touche \textbf{2}} (agent2);
+  \draw[arrow] (wait) -- node[right, font=\scriptsize]{Touche \textbf{0}} (queue);
+  \draw[arrow] (wait) -- node[right, font=\scriptsize]{Timeout} (bye);
+\end{tikzpicture}
+\end{center}
+
+\begin{infobox}[Qu'est-ce que DTMF ?]
+DTMF (Dual Tone Multi-Frequency) = les sons générés quand on appuie sur les touches d'un téléphone. Chaque touche génère une combinaison de 2 fréquences sonores. Asterisk les détecte via \texttt{dtmf\_mode=rfc4733} configuré dans pjsip.conf.
+\end{infobox}
+
+%============================================================
+\chapter{Configuration de Linphone}
+%============================================================
+
+\begin{infobox}[Qu'est-ce que Linphone ?]
+Linphone est un softphone open-source disponible sur Android, iPhone, Windows, Mac et Linux. Il supporte SIP, les appels audio et vidéo. Il joue le rôle de terminal IP dans notre architecture — l'équivalent d'un téléphone IP physique.
+\end{infobox}
+
+\section{Paramètres de connexion}
+
+\begin{center}
+\begin{tabular}{lll}
+\toprule
+\rowcolor{primarylight}\textbf{Paramètre} & \textbf{Compte 1001 (Étudiant)} & \textbf{Compte 1002 (Professeur)}\\
+\midrule
+Username & 1001 & 1002\\
+Password & <MOT_DE_PASSE> & <MOT_DE_PASSE>\\
+Domain & <IP_PUBLIQUE> & <IP_PUBLIQUE>\\
+Display name & Ibrahima Fall & Mr Mbaye\\
+Transport & UDP & UDP\\
+Port SIP & 5060 & 5060\\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\section{Activation de la vidéo}
+
+\begin{itemize}[leftmargin=1.4em, itemsep=3pt]
+  \item Paramètres ⚙ $\to$ Audio/Vidéo $\to$ Activer la vidéo
+  \item Codec vidéo : activer \textbf{H264} en priorité, \textbf{VP8} en fallback
+\end{itemize}
+
+\section{Vérification de l'enregistrement}
+
+\begin{codebox}[bash — Vérification depuis Asterisk]
+\begin{lstlisting}
+# Verifier les contacts enregistres
+sudo asterisk -rx "pjsip show contacts"
+# Resultat attendu : 1001 et 1002 avec l'etat Avail
+
+# Voir le dialplan charge
+sudo asterisk -rx "dialplan show internal"
+
+# Verifier la file d'attente
+sudo asterisk -rx "queue show support"
+
+# Verifier les boites vocales
+sudo asterisk -rx "voicemail show users"
+\end{lstlisting}
+\end{codebox}
+
+%============================================================
+\chapter{Tests et Validation}
+%============================================================
+
+\section{Tableau récapitulatif des tests}
+
+\begin{center}
+\begin{tabularx}{\textwidth}{clXl}
+\toprule
+\rowcolor{primarylight}\textbf{\#} & \textbf{Service} & \textbf{Procédure} & \textbf{Résultat}\\
+\midrule
+1 & Écho solo & Composer \texttt{9999} depuis Linphone & \textcolor{success}{\textbf{OK}}\\
+2 & Appel audio & 1001 appelle 1002, décroche, communication audio & \textcolor{success}{\textbf{OK}}\\
+3 & Appel vidéo & Pendant l'appel, activer la caméra dans Linphone & \textcolor{success}{\textbf{OK}}\\
+4 & Messagerie & 1001 appelle 1002 sans décrocher, laisse un message & \textcolor{success}{\textbf{OK}}\\
+5 & Écoute msg & 1002 compose \texttt{*97}, écoute le message reçu & \textcolor{success}{\textbf{OK}}\\
+6 & Conférence & Les 2 composent \texttt{200}, s'entendent mutuellement & \textcolor{success}{\textbf{OK}}\\
+7 & IVR & Compose \texttt{100}, voix Google, appuie 1/2/0 & \textcolor{success}{\textbf{OK}}\\
+8 & Queue & Compose \texttt{100} $\to$ 0, musique, agent 1001 sonne & \textcolor{success}{\textbf{OK}}\\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\section{Commandes de surveillance temps réel}
+
+\begin{codebox}[bash — Surveillance pendant les tests]
+\begin{lstlisting}
+# Appels en cours
+sudo asterisk -rx "core show channels"
+
+# Clients connectes
+sudo asterisk -rx "pjsip show contacts"
+
+# Participants en conference
+sudo asterisk -rx "confbridge list"
+
+# Etat de la file d'attente
+sudo asterisk -rx "queue show support"
+
+# Logs en temps reel
+sudo journalctl -u asterisk -f
+\end{lstlisting}
+\end{codebox}
+
+\section{Dépannage des problèmes rencontrés}
+
+\begin{center}
+\begin{tabularx}{\textwidth}{lXl}
+\toprule
+\rowcolor{primarylight}\textbf{Problème} & \textbf{Cause} & \textbf{Solution}\\
+\midrule
+Linphone ne se connecte pas & IP publique incorrecte dans pjsip.conf & \texttt{curl ifconfig.me}\\
+Appel sonne mais pas de son & Ports RTP 10000-20000 bloqués & Vérifier Security Group AWS\\
+IVR dit "numéro invalide" & Fichier bienvenue.wav absent ou mauvais format & Reconvertir avec ffmpeg\\
+Messagerie en anglais & \texttt{language=fr} manquant ou \texttt{Set(CHANNEL)} absent & Corriger voicemail.conf\\
+ACL bloque les téléphones & ACL dans pjsip.conf & Supprimer l'ACL\\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+%============================================================
+\chapter{Analyse des Protocoles avec Wireshark}
+%============================================================
+
+\begin{infobox}[Objectif de l'analyse Wireshark]
+Wireshark permet de capturer et analyser en temps réel tous les paquets réseau. Pour la ToIP, on capture le trafic SIP (signalisation) et RTP (flux audio/vidéo) pour voir exactement ce qui se passe lors d'un appel VoIP.
+\end{infobox}
+
+\section{Configuration de la capture}
+
+\begin{enumerate}[leftmargin=1.4em, itemsep=4pt]
+  \item Lancer Wireshark en \textbf{Administrateur} sur Windows
+  \item Sélectionner l'interface \textbf{Wi-Fi} ou \textbf{Ethernet} (celle qui a de l'activité)
+  \item Saisir le filtre : \texttt{sip || rtp}
+  \item Cliquer sur \textbf{▶} pour démarrer la capture
+\end{enumerate}
+
+\section{Analyse des paquets SIP capturés}
+
+Le flux SIP d'un appel complet entre 1001 et 1002 :
+
+\begin{center}
+\begin{tikzpicture}[
+  >=Stealth, thick,
+  entity/.style={draw, fill=primarylight, minimum width=2.5cm, minimum height=0.7cm,
+                 align=center, font=\small\bfseries},
+  msg/.style={font=\scriptsize, fill=white}
+]
+  % Entités
+  \node[entity] (c1) at (0, 0) {Linphone 1001};
+  \node[entity] (ast) at (5, 0) {Asterisk};
+  \node[entity] (c2) at (10, 0) {Linphone 1002};
+
+  % Lignes de vie
+  \draw[dashed, gray] (0, -0.35) -- (0, -9);
+  \draw[dashed, gray] (5, -0.35) -- (5, -9);
+  \draw[dashed, gray] (10, -0.35) -- (10, -9);
+
+  % Messages
+  \draw[->, primary] (0,-1) -- node[msg, above]{REGISTER} (5,-1);
+  \draw[<-, primary] (0,-1.6) -- node[msg, above]{200 OK} (5,-1.6);
+
+  \draw[->, orange] (0,-2.6) -- node[msg, above]{INVITE} (5,-2.6);
+  \draw[<-, orange] (0,-3.2) -- node[msg, above]{100 Trying} (5,-3.2);
+  \draw[->, orange] (5,-3.8) -- node[msg, above]{INVITE} (10,-3.8);
+  \draw[<-, orange] (5,-4.4) -- node[msg, above]{180 Ringing} (10,-4.4);
+  \draw[<-, orange] (0,-5) -- node[msg, above]{180 Ringing} (5,-5);
+
+  \draw[<-, success!70!black] (5,-5.8) -- node[msg, above]{200 OK} (10,-5.8);
+  \draw[<-, success!70!black] (0,-6.4) -- node[msg, above]{200 OK (session)} (5,-6.4);
+  \draw[->, success!70!black] (0,-7) -- node[msg, above]{ACK} (5,-7);
+
+  \draw[<->, red!60!black, dashed] (0,-7.6) -- node[msg, above]{RTP/RTCP (flux audio+vidéo)} (10,-7.6);
+
+  \draw[->, gray] (0,-8.4) -- node[msg, above]{BYE} (5,-8.4);
+  \draw[<-, gray] (0,-9) -- node[msg, above]{200 OK} (5,-9);
+\end{tikzpicture}
+\end{center}
+
+\section{Analyse du flux RTP}
+
+\begin{center}
+\begin{tabularx}{\textwidth}{lX}
+\toprule
+\rowcolor{primarylight}\textbf{Observation} & \textbf{Explication}\\
+\midrule
+Paquets RTP toutes les 20~ms & Chaque paquet = 20ms d'audio encodé en G711 (ulaw/alaw)\\
+Ports dynamiques 10000--20000 & Chaque appel utilise un port différent choisi aléatoirement\\
+SSRC fixe par flux & Identifiant unique du flux RTP — change à chaque nouvel appel\\
+Payload type 0 & G711 µ-law (ulaw) — codec audio standard\\
+Séquence numérotée & Permet de détecter les pertes de paquets et la gigue\\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\section{Écoute du contenu vocal}
+
+\begin{enumerate}[leftmargin=1.4em, itemsep=4pt]
+  \item Menu \textbf{Telephony} $\to$ \textbf{RTP} $\to$ \textbf{RTP Streams}
+  \item Sélectionner un flux (un dans chaque sens de la communication)
+  \item Cliquer \textbf{Analyze}
+  \item Cliquer \textbf{Play Streams} ��
+  \item On entend exactement la conversation enregistrée dans les paquets
+\end{enumerate}
+
+\begin{successbox}
+L'analyse Wireshark démontre concrètement : \textbf{SIP} gère la signalisation (établissement et fin d'appel) et \textbf{RTP} transporte la voix en temps réel avec une latence minimale.
+\end{successbox}
+
+%============================================================
+\chapter{Sécurisation du Serveur}
+%============================================================
+
+\section{Contexte — Menaces sur les serveurs SIP}
+
+\begin{dangerbox}[Le serveur est attaqué automatiquement]
+Dès qu'un serveur SIP est exposé sur internet (port 5060), des robots automatiques (sipvicious, Censys) le scannent pour tenter de voler des lignes téléphoniques. Dans les logs Asterisk, les messages "No matching endpoint found" indiquent ces tentatives de connexion malveillantes.
+\end{dangerbox}
+
+\section{Fail2ban — Protection automatique}
+
+\begin{infobox}[Principe de Fail2ban]
+Fail2ban surveille les logs d'Asterisk. Si une adresse IP effectue plus de 5 tentatives de connexion échouées en 10 minutes, elle est automatiquement bannie pendant 1 heure via une règle iptables. C'est la seule méthode recommandée — ne jamais utiliser d'ACL dans pjsip.conf.
+\end{infobox}
+
+\begin{codebox}[bash — Installation et configuration Fail2ban]
+\begin{lstlisting}
+sudo apt install -y fail2ban
+sudo nano /etc/fail2ban/jail.d/asterisk.conf
+\end{lstlisting}
+\end{codebox}
+
+\begin{codebox}[ini — /etc/fail2ban/jail.d/asterisk.conf]
+\begin{lstlisting}
+[asterisk]
+enabled = true
+port = 5060,5061
+protocol = udp
+filter = asterisk
+logpath = /var/log/asterisk/messages
+maxretry = 5      ; Banni apres 5 tentatives
+findtime = 600    ; en 10 minutes
+bantime = 3600    ; pendant 1 heure
+\end{lstlisting}
+\end{codebox}
+
+\begin{codebox}[bash — Activation et vérification]
+\begin{lstlisting}
+sudo systemctl enable fail2ban
+sudo systemctl start fail2ban
+
+# Voir les IPs bannies
+sudo fail2ban-client status asterisk
+
+# Debannir une IP si necessaire
+sudo fail2ban-client set asterisk unbanip X.X.X.X
+\end{lstlisting}
+\end{codebox}
+
+\section{Restriction de l'accès SSH}
+
+Dans la console AWS $\to$ EC2 $\to$ Security Group $\to$ Règle SSH : changer la source de \texttt{0.0.0.0/0} vers \textbf{"Mon adresse IP"}. Cela bloque toutes les tentatives de connexion SSH depuis internet.
+
+%============================================================
+\chapter{Conclusion}
+%============================================================
+
+\section{Bilan des réalisations}
+
+Ce travail pratique a permis de mettre en place une infrastructure de téléphonie sur IP complète et fonctionnelle, en utilisant exclusivement des technologies open-source et le cloud public AWS.
+
+\begin{successbox}[Tous les objectifs atteints]
+\begin{itemize}[leftmargin=1.2em, itemsep=3pt]
+  \item \textbf{Déploiement} d'un serveur Ubuntu 24.04 LTS sur AWS EC2 (Free Tier)
+  \item \textbf{Compilation} d'Asterisk 20.18 depuis les sources avec les correctifs Ubuntu 24.04
+  \item \textbf{Configuration} PJSIP avec gestion NAT complète (rtp\_symmetric, rewrite\_contact, force\_rport)
+  \item \textbf{Appels audio et vidéo} fonctionnels entre Android et Windows via Linphone
+  \item \textbf{Messagerie vocale} en français avec sons officiels téléchargés
+  \item \textbf{Conférence d'appel} ConfBridge multi-participants (extension 200)
+  \item \textbf{IVR} avec voix naturelle Google Text-to-Speech en français (extension 100)
+  \item \textbf{Centre d'appel} avec file d'attente Queue et stratégie round-robin (agents 1001/1002)
+  \item \textbf{Analyse Wireshark} des protocoles SIP et RTP avec écoute du flux audio capturé
+  \item \textbf{Sécurisation} par Fail2ban contre les scanners SIP automatiques
+\end{itemize}
+\end{successbox}
+
+\section{Correspondance avec le cours de ToIP}
+
+L'infrastructure déployée correspond exactement aux concepts théoriques enseignés dans le cours :
+
+\begin{center}
+\begin{tabularx}{\textwidth}{llX}
+\toprule
+\rowcolor{primarylight}\textbf{Composant} & \textbf{Rôle théorique} & \textbf{Démonstration pratique}\\
+\midrule
+Asterisk & IPBX / Softswitch & Gère la signalisation SIP et le routage des appels\\
+PJSIP/SIP & Protocole de signalisation & INVITE, ACK, BYE capturés dans Wireshark\\
+RTP/RTCP & Transport des flux média & Flux audio capturé et réécouté avec Wireshark\\
+Linphone & Terminal IP (softphone) & Enregistrement SIP, appels audio et vidéo\\
+AWS EC2 & Infrastructure réseau & Serveur cloud accessible depuis internet\\
+IVR/Queue & Services à valeur ajoutée & Menu vocal, file d'attente, distribution automatique\\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\section{Perspectives}
+
+Des améliorations possibles pour aller plus loin :
+\begin{itemize}[leftmargin=1.4em, itemsep=3pt]
+  \item Allocation d'une \textbf{Elastic IP} AWS pour une IP fixe permanente
+  \item Configuration d'un \textbf{trunk SIP} vers un opérateur pour passer des appels vers le PSTN
+  \item Mise en place de \textbf{TLS/SRTP} pour chiffrer la signalisation et les flux audio
+  \item Ajout d'un \textbf{enregistrement des appels} (MixMonitor) pour les besoins légaux
+  \item Interface web d'administration avec \textbf{FreePBX} ou \textbf{Asterisk GUI}
+\end{itemize}
+
+\vspace{1cm}
+\begin{tcolorbox}[
+  enhanced, arc=8pt,
+  colback=primarylight, colframe=primary,
+  left=12pt, right=12pt, top=10pt, bottom=10pt
+]
+\centering
+{\color{primary}\large\bfseries Infrastructure ToIP déployée et validée}\\[6pt]
+{\color{darkblue}\small
+Serveur : AWS EC2 eu-west-3 (Paris) $\cdot$ IP : <IP_PUBLIQUE>\\
+Extensions : 1001 (Ibrahima Fall) $\cdot$ 1002 (Mr Mbaye)\\
+Services : Audio · Vidéo · Messagerie · Conférence · IVR · Queue · Wireshark · Fail2ban
+}
+\end{tcolorbox}
+
+\end{document}
